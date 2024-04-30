@@ -1,0 +1,105 @@
+import tkinter as tk
+import datetime
+
+from llama_index.vector_stores.milvus import MilvusVectorStore
+from llama_index.core import VectorStoreIndex
+import openai
+
+#Fill in this information using the data in the Project Report
+
+#TODO fill in information using keys in handout
+# openai.api_key = 
+# uri = 
+# key =
+
+output_field = tk.Text
+def load_existing_index_as_query_engine(collection_name, k = 10):
+  
+  vector_store = MilvusVectorStore(dim=1536, overwrite=False, collection_name=collection_name, uri=uri, token=key)
+  index = VectorStoreIndex.from_vector_store(vector_store)
+  query_engine = index.as_query_engine()
+  query_engine.retriever.similarity_top_k = k
+
+  return query_engine
+
+query_engine = load_existing_index_as_query_engine("test_full_data")
+
+
+import tkinter as tk
+import datetime
+
+def on_submit(event=None):
+    user_input = input_field.get().strip().lower()
+    if not user_input:
+        return
+    try:
+        resp = query_engine.query(user_input)
+        response_text = str(resp)
+    except Exception as e:
+        response_text = f"Error: {str(e)}"
+
+    output_field.config(state='normal')
+    output_field.insert('end', 'User: ' + user_input + '\n', 'red')
+
+    if user_input == 'hi':
+        output_field.insert('end', 'Hello, how can I help you?\n', 'blue')
+    elif user_input == 'how are you':
+        output_field.insert('end', 'I am Okay. How about you?\n', 'blue')
+    elif user_input == 'hey':
+        output_field.insert('end', 'Hey! How can I help you? \n', 'blue')
+    elif user_input == 'how old are you':
+        output_field.insert('end', 'My creator just brought me to life in front of you. I am not much older than 10 minutes.\n', 'blue')
+    elif user_input == 'what time is it':
+        now = datetime.datetime.now()
+        output_field.insert('end', "It's " + now.strftime("%H:%M:%S %p") + '\n', 'blue')
+    elif user_input == 'bye':
+        output_field.insert('end', 'Goodbye, have a nice day!\n', 'blue')
+        input_field.delete(0, 'end')
+        output_field.config(state='disabled')
+        output_field.see('end')
+        root.after(800, root.destroy)  # Waits 800 ms before closing the window
+        return  # Exit the function to prevent further execution
+    else:
+        output_field.insert('end', response_text + '\n', 'blue')
+
+    input_field.delete(0, 'end')
+    output_field.config(state='disabled')
+    output_field.see('end')
+
+root = tk.Tk()
+root.title("CS1270 Edbot")
+root.grid_rowconfigure(0, weight=1)
+root.grid_columnconfigure(0, weight=1)
+
+output_frame = tk.Frame(root)
+output_frame.grid(row=0, column=0, sticky="nsew")
+output_frame.grid_rowconfigure(0, weight=1)
+output_frame.grid_columnconfigure(0, weight=1)
+
+output_label = tk.Label(output_frame, text="CS1270:")
+output_label.pack(side='left', padx=5, pady=5)
+
+output_field = tk.Text(output_frame)
+output_field.pack(side='left', fill='both', expand=True, padx=5, pady=5)
+output_field.config(state='disabled')
+output_field.tag_config('blue', foreground='#0077CC')
+output_field.tag_config('red', foreground='#DD0000')
+output_field.config(font=("Arial", 14))
+
+input_frame = tk.Frame(root)
+input_frame.grid(row=1, column=0, sticky="ew")
+input_frame.grid_columnconfigure(0, weight=1)
+input_frame.grid_columnconfigure(1, weight=0)
+
+input_label = tk.Label(input_frame, text="User:")
+input_label.grid(row=0, column=0, sticky='w', padx=5, pady=5)
+
+input_field = tk.Entry(input_frame)
+input_field.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+input_field.bind("<Return>", on_submit)
+
+submit_button = tk.Button(input_frame, text="Submit", command=on_submit)
+submit_button.grid(row=0, column=1, padx=5, pady=5)
+
+root.mainloop()
+
